@@ -33,8 +33,6 @@ def init_dashboard(server):
     # Create Layout
     dash_app.layout = html.Div(
         children=[
-            # create_data_graph(df),
-            # create_data_table(df),
             datePicker(),
             instalytics_graph(df),
             instalytics_table(df)
@@ -46,37 +44,6 @@ def init_dashboard(server):
     init_callbacks(dash_app)
 
     return dash_app.server
-
-# def create_data_graph(df):
-#     graph = dcc.Graph(
-#             id='histogram-graphh',
-#             figure={
-#                 'data': [{
-#                     'x': df['complaint_type'],
-#                     'text': df['complaint_type'],
-#                     'customdata': df['key'],
-#                     'name': '311 Calls by region.',
-#                     'type': 'histogram'
-#                 }],
-#                 'layout': {
-#                     'title': '311 Calls by region.',
-#                     'height': 500,
-#                     'padding': 150
-#                 }
-#             })
-#     return graph
-
-# def create_data_table(df):
-#     """Create Dash datatable from Pandas DataFrame."""
-#     table = dash_table.DataTable(
-#         id='database-table',
-#         columns=[{"name": i, "id": i} for i in df.columns],
-#         data=df.to_dict('records'),
-#         sort_action="native",
-#         sort_mode='native',
-#         page_size=20
-#     )
-#     return table
 
 def instalytics_table(df):
     """Create instalytics data table"""
@@ -111,7 +78,7 @@ def datePicker():
         id='my-date-picker-range',
         min_date_allowed=dt(1995, 8, 5),
         max_date_allowed=dt(2025, 12, 31),
-        initial_visible_month=dt(2020, 8, 5),
+        initial_visible_month=dt(2020, 10, 1),
         # end_date=dt(2020, 11, 11),
         minimum_nights=0,
         updatemode='singledate'
@@ -120,12 +87,28 @@ def datePicker():
 
 def init_callbacks(app):
     @app.callback(
-        Output('histogram-graph', 'children'),
+        Output('histogram-graph', 'figure'),
         [Input('my-date-picker-range', 'start_date'),
-        Input('my-date-picker-range', 'end_date')]
+        Input('my-date-picker-range', 'end_date')],
+        prevent_initial_call=True
     )
 
     def update_output(start_date, end_date):
         print("Start date: " + start_date)
         print("End date: " + end_date)
-        return print(dff = df.loc[start_date:end_date])
+        mask = (df['taken_at'] >= start_date) & (df['taken_at'] <= end_date)
+        dff = df.loc[mask]
+
+        fig = {
+                'data': [{
+                    'x': dff['ig_username'],
+                    'name': 'Post by user.',
+                    'type': 'histogram'
+                }],
+                'layout': {
+                    'title': 'Insatgram Post from {} until {}'.format(start_date,end_date),
+                    'height': 500,
+                    'padding': 150
+                }
+            }
+        return fig
