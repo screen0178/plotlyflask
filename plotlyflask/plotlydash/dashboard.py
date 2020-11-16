@@ -18,7 +18,7 @@ df = instalytics_dataframe()
 df_init = df[['ig_username','like_count']].groupby(['ig_username'], sort=False).sum().reset_index()
 df_init.sort_values('like_count', axis = 0, ascending = False, 
                  inplace = True, na_position ='last') 
-# print(df_init)
+# print(df_init[:25])
 
 
 def init_dashboard(server):
@@ -39,6 +39,8 @@ def init_dashboard(server):
     dash_app.layout = html.Div(
         children=[
             datePicker(),
+            radioButton(),
+            # dropDown(),
             instalytics_graph(df_init),
             instalytics_table(df_init)
         ],
@@ -49,7 +51,7 @@ def init_dashboard(server):
     init_callbacks(dash_app)
 
     # Pass dash_app as a parameter
-    return dash_app.server
+    return dash_app.server 
 
 def instalytics_table(df):
     """Create instalytics data table"""
@@ -95,37 +97,121 @@ def datePicker():
     )
     return datepick
 
+def radioButton():
+    radItem = dcc.RadioItems(
+        id = 'radio-item',
+        options = [
+            {'label': 'Daily', 'value': 'daily'},
+            {'label': 'Monthly', 'value': 'monthly'},
+            {'label': 'Dynamic', 'value': 'dinamis'}
+        ],
+        value = 'dinamis'
+    )
+    return radItem
+
+# def dropDown():
+#     drpDown = dcc.Dropdown(
+#         id='drop-down',
+#         option=[
+#             {'label': 'Jan', 'value': 1},
+#             {'label': 'Feb', 'value': 2},
+#             {'label': 'Mar', 'value': 3},
+#             {'label': 'Apr', 'value': 4},
+#             {'label': 'Mei', 'value': 5},
+#             {'label': 'Jun', 'value': 6},
+#             {'label': 'Jul', 'value': 7},
+#             {'label': 'Aug', 'value': 8},
+#             {'label': 'Sep', 'value': 9},
+#             {'label': 'Oct', 'value': 10},
+#             {'label': 'Nov', 'value': 11},
+#             {'label': 'Des', 'value': 12},
+#         ],
+#         value=1
+#     )
+#     return drpDown
+
 def init_callbacks(app):
     @app.callback(
         Output('histogram-graph', 'figure'),
-        [Input('my-date-picker-range', 'start_date'),
-        Input('my-date-picker-range', 'end_date')],
+        [Input('radio-item', 'value'),
+        Input('my-date-picker-range', 'start_date'),
+        Input('my-date-picker-range', 'end_date'),],
         prevent_initial_call=True
     )
 
-    def update_output(start_date, end_date):
-        print("Start date: " + start_date)
-        print("End date: " + end_date)
-        mask = (df['taken_at'] >= start_date) & (df['taken_at'] <= end_date)
-        # mask1 = df['taken_at'] >= start_date
-        dff = df.loc[mask]
+    def update_output(value, start_date, end_date):
+        if value == 'dinamis':
+            print("Start date: " + start_date)
+            print("End date: " + end_date)
+            mask = (df['taken_at'] >= start_date) & (df['taken_at'] <= end_date)
+            dff = df.loc[mask]
 
-        dff = dff[['ig_username','like_count']].groupby(['ig_username'], sort=False).sum().reset_index()
-        dff.sort_values('like_count', axis = 0, ascending = False, 
-                            inplace = True, na_position ='last')
-        print(dff)
-        dff = dff[0:25]
-        fig = {
-                'data': [{
-                    'x': dff['ig_username'],
-                    'y': dff['like_count'],
-                    'name': 'Post by user.',
-                    'type': 'bar'
-                }],
-                'layout': {
-                    'title': 'Total like from {} until {} per account'.format(start_date,end_date),
-                    'height': 500,
-                    'padding': 150
+            dff = dff[['ig_username','like_count']].groupby(['ig_username'], sort=False).sum().reset_index()
+            dff.sort_values('like_count', axis = 0, ascending = False, 
+                                inplace = True, na_position ='last')
+            # print(dff)
+            dff = dff[0:25]
+            fig = {
+                    'data': [{
+                        'x': dff['ig_username'],
+                        'y': dff['like_count'],
+                        'name': 'Post by user.',
+                        'type': 'bar'
+                    }],
+                    'layout': {
+                        'title': 'Total like from {} until {} per account'.format(start_date,end_date),
+                        'height': 500,
+                        'padding': 150
+                    }
                 }
-            }
+        elif value == 'daily':
+            dff = df.groupby(['ig_username',pd.Grouper(key='taken_at')])['like_count'].sum().reset_index()
+            dff['taken_at_daily'] = dff['taken_at'].dt.day
+            mask = dff['taken_at'].dt.month == 9
+            dff = dff.loc[mask]
+
+            fig = px.bar(
+                data_frame=dff,
+                x='taken_at_daily',
+                y='like_count',
+                color='ig_username',
+                opacity=0.9,
+                barmode='relative'
+            )
+        elif value == 'monthly':
+            dff = df.groupby(['ig_username',pd.Grouper(key='taken_at')])['like_count'].sum().reset_index()
+            dff['taken_at_monthly'] = dff['taken_at'].dt.month
+
+            fig = px.bar(
+                data_frame=dff,
+                x='taken_at_monthly',
+                y='like_count',
+                color='ig_username',
+                opacity=0.9,
+                barmode='relative'
+            )
         return fig
+
+        # @app.callback(
+        #     Output('histogram-graph', 'figure'),
+        #     Input('radio-item', 'value'),
+        #     prevent_initial_call=True
+        # )
+
+        # def graph_update(cat):
+        #     if cat == 'daily':
+        #         dff = df.groupby(['ig_username',pd.Grouper(key='taken_at')])['like_count'].sum().reset_index()
+        #         dff['taken_at_daily'] = dff['taken_at'].dt.day
+        #         mask = dff['taken_at'].dt.month == 9
+        #         dff = dff.loc[mask]
+
+        #     fig = px.bar(
+        #         data_frame=dff,
+        #         x='taken_at_daily',
+        #         y='like_count',
+        #         color='ig_username',
+        #         opacity=0.9,
+        #         barmode='relative'
+        #     )
+        #     return fig
+
