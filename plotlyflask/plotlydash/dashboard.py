@@ -6,14 +6,19 @@ import dash_table
 from datetime import datetime as dt
 import dash_html_components as html
 import dash_core_components as dcc
-# from .data import create_dataframe
 from .data import instalytics_dataframe
 from .layout import html_layout
 from dash.dependencies import Input, Output
+import plotly.express as px
 
 # Load DataFrame
-# df = create_dataframe()
 df = instalytics_dataframe()
+
+# Prepare initial data
+df_init = df[['ig_username','like_count']].groupby(['ig_username'], sort=False).sum().reset_index()
+df_init.sort_values('like_count', axis = 0, ascending = False, 
+                 inplace = True, na_position ='last') 
+# print(df_init)
 
 
 def init_dashboard(server):
@@ -34,15 +39,16 @@ def init_dashboard(server):
     dash_app.layout = html.Div(
         children=[
             datePicker(),
-            instalytics_graph(df),
-            instalytics_table(df)
+            instalytics_graph(df_init),
+            instalytics_table(df_init)
         ],
         id='dash-container'
     )
 
-    # Pass dash_app as a parameter
+    # Calling callback function
     init_callbacks(dash_app)
 
+    # Pass dash_app as a parameter
     return dash_app.server
 
 def instalytics_table(df):
@@ -57,20 +63,24 @@ def instalytics_table(df):
     return tabel
 
 def instalytics_graph(df):
+    df = df[0:25]
     graph = dcc.Graph(
             id='histogram-graph',
-            figure={
+            figure=
+            {
                 'data': [{
                     'x': df['ig_username'],
-                    'name': 'Post by user.',
-                    'type': 'histogram'
+                    'y': df['like_count'],
+                    'name': 'total like per user.',
+                    'type': 'bar'
                 }],
                 'layout': {
-                    'title': 'Insatgram Post by User.',
+                    'title': 'Like Count per User.',
                     'height': 500,
                     'padding': 150
                 }
-            })
+            }
+            )
     return graph
 
 def datePicker():
@@ -97,16 +107,23 @@ def init_callbacks(app):
         print("Start date: " + start_date)
         print("End date: " + end_date)
         mask = (df['taken_at'] >= start_date) & (df['taken_at'] <= end_date)
+        # mask1 = df['taken_at'] >= start_date
         dff = df.loc[mask]
 
+        dff = dff[['ig_username','like_count']].groupby(['ig_username'], sort=False).sum().reset_index()
+        dff.sort_values('like_count', axis = 0, ascending = False, 
+                            inplace = True, na_position ='last')
+        print(dff)
+        dff = dff[0:25]
         fig = {
                 'data': [{
                     'x': dff['ig_username'],
+                    'y': dff['like_count'],
                     'name': 'Post by user.',
-                    'type': 'histogram'
+                    'type': 'bar'
                 }],
                 'layout': {
-                    'title': 'Insatgram Post from {} until {}'.format(start_date,end_date),
+                    'title': 'Total like from {} until {} per account'.format(start_date,end_date),
                     'height': 500,
                     'padding': 150
                 }
