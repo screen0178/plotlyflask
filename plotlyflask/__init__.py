@@ -20,6 +20,8 @@ def init_app():
         app = init_likeDashboard(app)
         from .plotlydash.dashboard_comment import init_commentDashboard
         app = init_commentDashboard(app)
+        from .plotlydash.dashboard_response import init_responseDashboard
+        app = init_responseDashboard(app)
 
         # Compile static assets
         compile_static_assets(assets)
