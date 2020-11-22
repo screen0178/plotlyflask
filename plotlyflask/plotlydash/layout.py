@@ -111,6 +111,7 @@ html_layout = '''
                 <a href="/likeDashboard/">Like Analysis</a>
                 <a href="/commentDashboard/">Comment Analysis</a>
                 <a href="/responseDashboard/">Response Analysis</a>
+                <a href="/postDashboard/">Post Analysis</a>
             </div>
             <div class="content">
                 {%app_entry%}
