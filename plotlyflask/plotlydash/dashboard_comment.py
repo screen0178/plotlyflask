@@ -28,6 +28,7 @@ def init_commentDashboard(server):
         routes_pathname_prefix='/commentDashboard/',
         external_stylesheets=[
             '/static/dist/css/styles.css',
+            '/static/dist/css/sidebar.css',
             'https://fonts.googleapis.com/css?family=Lato'
         ]
     )
