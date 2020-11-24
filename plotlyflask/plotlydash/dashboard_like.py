@@ -60,7 +60,9 @@ def instalytics_table(df):
         columns=[{"name": i, "id": i} for i in df.columns],
         data=df.to_dict('records'),
         style_table={'overflowX': 'auto'},
-        page_size=20
+        page_size=20,
+        sort_action="native",
+        sort_mode='native',
     )
     return tabel
 
@@ -134,7 +136,9 @@ def dropDown():
 
 def init_callbacks(app):
     @app.callback(
-        Output('histogram-graph', 'figure'),
+        [Output('histogram-graph', 'figure'),
+        Output('database-table','data'),
+        Output('database-table','columns')],
         [Input('radio-item', 'value'),
         Input('drop-down', 'value'),
         Input('my-date-picker-range', 'start_date'),
@@ -167,32 +171,36 @@ def init_callbacks(app):
                         'padding': 150
                     }
                 }
+            tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
         elif value == 'daily':
             dff = df.groupby(['ig_username',pd.Grouper(key='taken_at')])['like_count'].sum().reset_index()
-            dff['taken_at_daily'] = dff['taken_at'].dt.day
+            dff['day'] = dff['taken_at'].dt.day
             mask = dff['taken_at'].dt.month == value_month
             dff = dff.loc[mask]
+            dff = dff.drop('taken_at',1)
+
             if dff.empty:
                 print("KOSONG")
                 fig = ()
+                tableData=dff.to_dict('records')
             else:
                 fig = px.bar(
                     data_frame=dff,
-                    x='taken_at_daily',
+                    x='day',
                     y='like_count',
                     color='ig_username',
                     opacity=0.9,
                     barmode='overlay'
                 )
+                fig.update_layout(hovermode='x')
+                tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
         elif value == 'monthly':
-            # dff = df.groupby(['ig_username',pd.Grouper(key='taken_at')])['like_count'].sum().reset_index()
-            # dff['taken_at_monthly'] = dff['taken_at'].dt.month
-
             dff = df[['ig_username','like_count','taken_at']]
             dff['month'] = dff['taken_at'].dt.month
             dff['month'] = dff['month'].astype(str)
             dff = dff[['ig_username','like_count','month']].groupby(['ig_username','month'], sort=True).sum().reset_index()
-            # dff['month'] = dff['month'].astype(str)
 
             fig = px.bar(
                 data_frame=dff,
@@ -202,5 +210,8 @@ def init_callbacks(app):
                 opacity=0.9,
                 barmode='overlay'
             )
-        return fig
+            fig.update_layout(hovermode='x')
+            tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
+        return fig, tableData, tableColumns 
 

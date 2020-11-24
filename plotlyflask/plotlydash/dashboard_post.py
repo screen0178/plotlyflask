@@ -163,7 +163,7 @@ def init_callbacks(app):
                         'type': 'bar'
                     }],
                     'layout': {
-                        'title': 'Total response from {} until {} per account'.format(start_date,end_date),
+                        'title': 'Total post from {} until {} per account'.format(start_date,end_date),
                         'height': 500,
                         'padding': 150
                     }
@@ -173,7 +173,7 @@ def init_callbacks(app):
             dff['day'] = dff['taken_at'].dt.day.astype(str)
             dff['month'] = dff['taken_at'].dt.month.astype(str)
             # mask = dff['month'] == str(value_month)
-            mask = dff['month'] == 6
+            mask = dff['month'] == value_month
             dff = dff.loc[mask]
             print(dff)
             dff = dff[['ig_username','url','month','day']].groupby(['ig_username','day','month'], sort=True).count().reset_index()
