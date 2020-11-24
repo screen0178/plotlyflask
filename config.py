@@ -1,4 +1,5 @@
 """Flask config."""
+import os
 from os import environ, path
 from dotenv import load_dotenv
 
@@ -23,3 +24,8 @@ class Config:
     STATIC_FOLDER = 'static'
     TEMPLATES_FOLDER = 'templates'
     COMPRESSOR_DEBUG = environ.get('COMPRESSOR_DEBUG')
+
+    # Flask-SQLAlchemy
+    SQLALCHEMY_DATABASE_URI = environ.get('SQLALCHEMY_DATABASE_URI') + os.path.join(BASE_DIR,'db.sqlite3')
+    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

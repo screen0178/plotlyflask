@@ -44,7 +44,8 @@ html_layout = '''
                     <a href="/">
                         <!-- <img src="/static/img/logo.png" class="logo" /> -->
                         <h1>Instalytics</h1>
-                    </a> 
+                    </a>
+                    <a href="/logout" style="text-align: right">Logout</a> 
                 </div>
             </header>
             <div class="sidebar">
