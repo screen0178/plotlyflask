@@ -60,7 +60,9 @@ def instalytics_table(df):
         columns=[{"name": i, "id": i} for i in df.columns],
         data=df.to_dict('records'),
         style_table={'overflowX': 'auto'},
-        page_size=20
+        page_size=20,
+        sort_action="native",
+        sort_mode='native',
     )
     return tabel
 
@@ -113,20 +115,20 @@ def dropDown():
     drpDown = dcc.Dropdown(
         id='drop-down',
         options=[
-            {'label': 'Jan', 'value': 1},
-            {'label': 'Feb', 'value': 2},
-            {'label': 'Mar', 'value': 3},
-            {'label': 'Apr', 'value': 4},
-            {'label': 'Mei', 'value': 5},
-            {'label': 'Jun', 'value': 6},
-            {'label': 'Jul', 'value': 7},
-            {'label': 'Aug', 'value': 8},
-            {'label': 'Sep', 'value': 9},
-            {'label': 'Oct', 'value': 10},
-            {'label': 'Nov', 'value': 11},
-            {'label': 'Des', 'value': 12},
+            {'label': 'Jan', 'value': '1'},
+            {'label': 'Feb', 'value': '2'},
+            {'label': 'Mar', 'value': '3'},
+            {'label': 'Apr', 'value': '4'},
+            {'label': 'Mei', 'value': '5'},
+            {'label': 'Jun', 'value': '6'},
+            {'label': 'Jul', 'value': '7'},
+            {'label': 'Aug', 'value': '8'},
+            {'label': 'Sep', 'value': '9'},
+            {'label': 'Oct', 'value': '10'},
+            {'label': 'Nov', 'value': '11'},
+            {'label': 'Des', 'value': '12'},
         ],
-        value=1,
+        value='1',
         clearable=False,
         searchable=False
     )
@@ -134,7 +136,9 @@ def dropDown():
 
 def init_callbacks(app):
     @app.callback(
-        Output('histogram-graph', 'figure'),
+        [Output('histogram-graph', 'figure'),
+        Output('database-table','data'),
+        Output('database-table','columns')],
         [Input('radio-item', 'value'),
         Input('drop-down', 'value'),
         Input('my-date-picker-range', 'start_date'),
@@ -168,18 +172,19 @@ def init_callbacks(app):
                         'padding': 150
                     }
                 }
+            tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
         elif value == 'daily':
             dff = df[['ig_username','url','taken_at']]
             dff['day'] = dff['taken_at'].dt.day.astype(str)
             dff['month'] = dff['taken_at'].dt.month.astype(str)
-            # mask = dff['month'] == str(value_month)
             mask = dff['month'] == value_month
             dff = dff.loc[mask]
-            print(dff)
             dff = dff[['ig_username','url','month','day']].groupby(['ig_username','day','month'], sort=True).count().reset_index()
             if dff.empty:
                 print("KOSONG dan {}".format(value_month))
                 fig = ()
+                tableData=dff.to_dict('records')
             else:
                 fig = px.bar(
                     data_frame=dff,
@@ -189,6 +194,9 @@ def init_callbacks(app):
                     opacity=0.9,
                     barmode='overlay'
                 )
+                fig.update_layout(hovermode='x')
+                tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
         elif value == 'monthly':
 
             dff = df[['ig_username','url','taken_at']]
@@ -204,5 +212,8 @@ def init_callbacks(app):
                 opacity=0.9,
                 barmode='overlay'
             )
-        return fig
+            fig.update_layout(hovermode='x')
+            tableData=dff.to_dict('records')
+            tableColumns=[{"name": i, "id": i} for i in dff.columns]
+        return fig, tableData, tableColumns 
 
