@@ -28,6 +28,7 @@ def init_likeDashboard(server):
         routes_pathname_prefix='/likeDashboard/',
         external_stylesheets=[
             '/static/dist/css/styles.css',
+            '/static/dist/css/sidebar.css',
             'https://fonts.googleapis.com/css?family=Lato'
         ]
     )
